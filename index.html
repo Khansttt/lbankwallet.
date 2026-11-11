@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LBank Wallet</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #0f172a;
+            --card-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --nav-bg: #f8fafc;
+            --subtext: #64748b;
+        }
+        [data-theme="dark"] {
+            --bg-color: #0b0f19;
+            --text-color: #f8fafc;
+            --card-bg: #111827;
+            --border-color: #1f2937;
+            --nav-bg: #1e293b;
+            --subtext: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; -webkit-tap-highlight-color: transparent; transition: background 0.3s, color 0.3s; }
+        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 50px; }
+        .top-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: var(--bg-color); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; }
+        .header-title { font-size: 1.1rem; font-weight: 700; color: var(--text-color); display: flex; align-items: center; gap: 6px; }
+        .shield-tag { background: #f0fdf4; color: #16a34a; font-size: 0.6rem; padding: 2px 6px; border-radius: 12px; border: 1px solid #bbf7d0; font-weight: 600; }
+        .tab-wrap { display: none; }
+        #tab-assets:checked ~ .container-assets,
+        #tab-swap:checked ~ .container-swap,
+        #tab-deposit:checked ~ .container-deposit,
+        #tab-withdraw:checked ~ .container-withdraw,
+        #tab-tasks:checked ~ .container-tasks { display: block; }
+        #tab-assets:checked ~ .nav-tabs .btn-assets,
+        #tab-swap:checked ~ .nav-tabs .btn-swap,
+        #tab-deposit:checked ~ .nav-tabs .btn-deposit,
+        #tab-withdraw:checked ~ .nav-tabs .btn-withdraw,
+        #tab-tasks:checked ~ .nav-tabs .btn-tasks { background: var(--card-bg); color: #0284c7; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
+        .nav-tabs { display: flex; background: var(--nav-bg); padding: 4px; margin: 12px 16px; border-radius: 12px; border: 1px solid var(--border-color); overflow-x: auto; }
+        .nav-btn { flex: 1; min-width: 60px; padding: 8px 4px; text-align: center; font-size: 0.7rem; font-weight: 600; color: var(--subtext); background: transparent; border: none; border-radius: 8px; cursor: pointer; text-decoration: none; display: inline-block; white-space: nowrap; }
+        .content-pane { padding: 0 16px; }
+        .balance-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .bal-label { font-size: 0.8rem; color: var(--subtext); font-weight: 500; display: flex; align-items: center; justify-content: space-between; }
+        .bal-amount { font-size: 1.8rem; font-weight: 800; color: var(--text-color); margin: 4px 0; }
+        .bal-sub { font-size: 0.8rem; color: var(--subtext); margin-bottom: 18px; }
+        .action-grid { display: flex; justify-content: space-between; gap: 10px; }
+        .action-btn-item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; text-decoration: none; cursor: pointer; }
+        .action-circle { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+        .action-text { font-size: 0.75rem; font-weight: 600; color: var(--text-color); }
+        .bg-orange { background: #fff7ed; color: #ea580c; }
+        .bg-green { background: #f0fdf4; color: #16a34a; }
+        .bg-blue { background: #eff6ff; color: #2563eb; }
+        .bg-purple { background: #faf5ff; color: #9333ea; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 10px; }
+        .section-title { font-size: 0.95rem; font-weight: 700; color: var(--text-color); }
+        .asset-list { display: flex; flex-direction: column; gap: 10px; }
+        .asset-row { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.02); text-decoration: none; }
+        .asset-left { display: flex; align-items: center; gap: 12px; }
+        .coin-icon { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.1rem; }
+        .coin-name { font-size: 0.9rem; font-weight: 700; color: var(--text-color); }
+        .coin-symbol { font-size: 0.75rem; color: var(--subtext); }
+        .coin-bal { font-size: 0.9rem; font-weight: 700; color: var(--text-color); text-align: right; }
+        .coin-val { font-size: 0.75rem; color: var(--subtext); text-align: right; }
+        .form-group { margin-bottom: 14px; }
+        label { font-size: 0.75rem; color: var(--subtext); display: block; margin-bottom: 6px; font-weight: 600; text-transform: uppercase; }
+        select, input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--nav-bg); color: var(--text-color); font-size: 0.9rem; outline: none; }
+        .qr-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 14px; border-radius: 14px; text-align: center; margin-bottom: 14px; }
+        .qr-box { background: #ffffff; padding: 10px; border-radius: 10px; width: 130px; height: 130px; margin: 0 auto 10px auto; display: flex; justify-content: center; align-items: center; border: 1px solid var(--border-color); }
+        .qr-box img { width: 110px; height: 110px; display: block; }
+        .address-box { background: var(--nav-bg); border: 1px dashed var(--border-color); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 0.75rem; color: #16a34a; font-weight: 700; word-break: break-all; margin-bottom: 10px; }
+        .btn-primary { width: 100%; padding: 13px; background: #0284c7; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.9rem; }
+        .btn-success { background: #16a34a; }
+        .notice-box { background: #fefce8; border: 1px solid #fef08a; padding: 10px; border-radius: 8px; font-size: 0.72rem; color: #854d0e; line-height: 1.4; margin-top: 10px; }
+        [data-theme="dark"] .notice-box { background: #322d14; border-color: #713f12; color: #fef08a; }
+        .min-deposit-tag { background: var(--nav-bg); border: 1px dashed #0284c7; padding: 8px; border-radius: 8px; text-align: center; font-size: 0.75rem; color: #0369a1; font-weight: 700; margin-top: 10px; }
+        .bonus-banner { background: linear-gradient(135deg, #16a34a, #0284c7); color: white; padding: 12px; border-radius: 12px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .bonus-title { font-size: 0.85rem; font-weight: 800; }
+        .bonus-desc { font-size: 0.7rem; opacity: 0.9; margin-top: 2px; }
+        .bonus-badge { background: #fef08a; color: #854d0e; font-size: 0.65rem; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; }
+        .task-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02); margin-bottom: 10px; }
+        .task-left { display: flex; align-items: center; gap: 12px; }
+        .task-icon { width: 40px; height: 40px; background: #f0fdf4; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: bold; }
+        .task-title { font-size: 0.9rem; font-weight: 700; color: var(--text-color); }
+        .task-sub { font-size: 0.72rem; color: var(--subtext); margin-top: 2px; }
+        .task-btn { background: #16a34a; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; cursor: pointer; text-decoration: none; }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(100px); background: #0f172a; color: white; padding: 10px 20px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; box-shadow: 0 5px 15px rgba(0,0,0,0.2); transition: transform 0.3s ease; z-index: 1000; }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+        [data-theme="dark"] #toast { background: #f8fafc; color: #0f172a; }
+    </style>
+</head>
+<body data-theme="light">
+<input type="radio" name="tabs" id="tab-assets" checked style="display:none;">
+<input type="radio" name="tabs" id="tab-swap" style="display:none;">
+<input type="radio" name="tabs" id="tab-deposit" style="display:none;">
+<input type="radio" name="tabs" id="tab-withdraw" style="display:none;">
+<input type="radio" name="tabs" id="tab-tasks" style="display:none;">
+
+<div class="top-header">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.2rem; cursor: pointer;" onclick="toggleTheme()">🌓</span>
+        <div class="header-title">
+            LBank Wallet <span class="shield-tag">🛡️ Verified</span>
+        </div>
+    </div>
+    <div style="font-size: 1.1rem; color: var(--subtext); cursor: pointer;" onclick="showToast('Scanner / Menu feature coming soon!')">🔍 ⛶ ⋮</div>
+</div>
+
+<div class="nav-tabs">
+    <label for="tab-assets" class="nav-btn btn-assets">Assets</label>
+    <label for="tab-swap" class="nav-btn btn-swap">Swap</label>
+    <label for="tab-deposit" class="nav-btn btn-deposit">Receive</label>
+    <label for="tab-withdraw" class="nav-btn btn-withdraw">Send</label>
+    <label for="tab-tasks" class="nav-btn btn-tasks">Task Center</label>
+</div>
+
+<div class="tab-wrap container-assets content-pane">
+    <div class="balance-card">
+        <div class="bal-label">
+            <span>Total Balance</span>
+            <span style="cursor: pointer;" onclick="toggleBalance()" id="eyeIcon">👁️</span>
+        </div>
+        <div class="bal-amount" id="balAmount">0 <span style="font-size: 1rem; font-weight: 600; color: var(--subtext);">USD</span></div>
+        <div class="bal-sub" id="balSub">0.00 BTC</div>
+        <div class="action-grid">
+            <label for="tab-deposit" class="action-btn-item">
+                <div class="action-circle bg-orange">$</div>
+                <div class="action-text">Buy/Deposit</div>
+            </label>
+            <label for="tab-deposit" class="action-btn-item">
+                <div class="action-circle bg-green">↓</div>
+                <div class="action-text">Receive</div>
+            </label>
+            <label for="tab-withdraw" class="action-btn-item">
+                <div class="action-circle bg-blue">↑</div>
+                <div class="action-text">Send</div>
+            </label>
+            <label for="tab-tasks" class="action-btn-item">
+                <div class="action-circle bg-purple">🎁</div>
+                <div class="action-text">Task Center</div>
+            </label>
+        </div>
+    </div>
+    <div class="section-header">
+        <div class="section-title">Assets</div>
+        <div style="font-size: 0.8rem; font-weight: 600; color: var(--subtext);">$0 ›</div>
+    </div>
+    <div class="asset-list">
+        <label for="tab-deposit" class="asset-row" style="cursor: pointer;">
+            <div class="asset-left">
+                <div class="coin-icon" style="background: #fff7ed; color: #f59e0b;">₿</div>
+                <div>
+                    <div class="coin-name">BTC</div>
+                    <div class="coin-symbol">Bitcoin</div>
+                </div>
+            </div>
+            <div>
+                <div class="coin-bal">0.00 BTC</div>
+                <div class="coin-val">≈ $0.00</div>
+            </div>
+        </label>
+        <label for="tab-deposit" class="asset-row" style="cursor: pointer;">
+            <div class="asset-left">
+                <div class="coin-icon" style="background: #f0fdf4; color: #16a34a;">₮</div>
+                <div>
+                    <div class="coin-name">USDT</div>
+                    <div class="coin-symbol">Tether USD</div>
+                </div>
+            </div>
+            <div>
+                <div class="coin-bal">0.00 USDT</div>
+                <div class="coin-val">≈ $0.00</div>
+            </div>
+        </label>
+        <label for="tab-deposit" class="asset-row" style="cursor: pointer;">
+            <div class="asset-left">
+                <div class="coin-icon" style="background: #f0f9ff; color: #0284c7;">Ξ</div>
+                <div>
+                    <div class="coin-name">ETH</div>
+                    <div class="coin-symbol">Ethereum</div>
+                </div>
+            </div>
+            <div>
+                <div class="coin-bal">0.00 ETH</div>
+                <div class="coin-val">≈ $0.00</div>
+            </div>
+        </label>
+    </div>
+</div>
+
+<div class="tab-wrap container-swap content-pane">
+    <div style="font-size: 1rem; font-weight: 700; margin-bottom: 14px;">Instant Crypto Swap</div>
+    <div class="form-group">
+        <label>From Asset</label>
+        <select>
+            <option>USDT (Tether)</option>
+            <option>BTC (Bitcoin)</option>
+            <option>ETH (Ethereum)</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <input type="number" placeholder="Enter amount to swap" value="0">
+    </div>
+    <div style="text-align: center; margin: 4px 0; color: #0284c7; font-size: 1.2rem;">↓</div>
+    <div class="form-group">
+        <label>To Asset</label>
+        <select>
+            <option>BTC (Bitcoin)</option>
+            <option>ETH (Ethereum)</option>
+            <option>USDT (Tether)</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <input type="text" placeholder="Estimated receive" value="0.00" disabled style="font-weight: bold;">
+    </div>
+    <button class="btn-primary btn-success" onclick="showToast('❌ Insufficient Balance!')">Exchange Now</button>
+</div>
+
+<div class="tab-wrap container-deposit content-pane">
+    <div class="bonus-banner">
+        <div>
+            <div class="bonus-title">🔥 100% Deposit Bonus Offer!</div>
+            <div class="bonus-desc">Deposit $10 or more and get 100% cash bonus added instantly.</div>
+        </div>
+        <div class="bonus-badge">100% Bonus</div>
+    </div>
+    <div class="form-group">
+        <label for="depositCoin">Select Coin</label>
+        <select id="depositCoin" onchange="updateQR()">
+            <option value="USDT (TRC20) - TPihYJBNtDbPeF6sKx3wZisGYiJjRf4xiN">USDT (Tron / TRC20)</option>
+            <option value="USDT (BEP20) - 0x5EF75b2ca983c072e9144dfBfDF35D077139F357">USDT (Binance Smart Chain / BEP20)</option>
+            <option value="BTC (Bitcoin) - bc1qstjet3wuaf6hvyca0vw0zrr5ctajx4nv570shq">Bitcoin (BTC)</option>
+            <option value="ETH (ERC20) - 0x96d35827DbA3132424538cE8f25DE3A188fA1ACE">Ethereum (ETH)</option>
+            <option value="BNB (BEP20) - 0x5EF75b2ca983c072e9144dfBfDF35D077139F357">Binance Coin (BNB)</option>
+            <option value="SOL (Solana) - By5JUxXzhJzaTv2oskdwHGEgtDL9od29xNDu4Ngu8CTW">Solana (SOL)</option>
+        </select>
+    </div>
+    <div class="qr-card">
+        <div class="qr-box">
+            <img id="qrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=TPihYJBNtDbPeF6sKx3wZisGYiJjRf4xiN" alt="QR Code">
+        </div>
+        <div style="font-size: 0.72rem; color: var(--subtext); margin-bottom: 6px; font-weight: 600;">ACTIVE DEPOSIT ADDRESS</div>
+        <div class="address-box" id="displayAddr">TPihYJBNtDbPeF6sKx3wZisGYiJjRf4xiN</div>
+        <button class="btn-primary" onclick="copyText()">Copy Address</button>
+    </div>
+    <div class="notice-box">
+        ⚠️ <strong>Security Notice:</strong> Send only supported assets via the selected network. Minimum deposit is $10.00 to qualify for the 100% bonus.
+    </div>
+    <div class="min-deposit-tag">
+        🎁 100% Bonus Active: Deposit $10 get $10 Extra!
+    </div>
+</div>
+
+<div class="tab-wrap container-withdraw content-pane">
+    <div class="form-group">
+        <label>Select Coin</label>
+        <select>
+            <option>USDT (Tether)</option>
+            <option>BTC (Bitcoin)</option>
+            <option>ETH (Ethereum)</option>
+            <option>SOL (Solana)</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Select Payout Chain</label>
+        <select>
+            <option>TRC20 / BEP20 / ERC20</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Recipient Wallet Address</label>
+        <input type="text" placeholder="Paste destination wallet address...">
+    </div>
+    <div class="form-group">
+        <label>Amount</label>
+        <input type="number" placeholder="0.00">
+    </div>
+    <button class="btn-primary btn-success" onclick="showToast('❌ Insufficient Balance!')">Confirm Withdrawal</button>
+    <div class="notice-box" style="background: var(--nav-bg); border-color: var(--border-color); color: var(--subtext); margin-top: 10px;">
+        ℹ️ Withdrawals are processed securely through master routed node network.
+    </div>
+</div>
+
+<div class="tab-wrap container-tasks content-pane">
+    <div style="font-size: 1rem; font-weight: 700; margin-bottom: 6px;">Task Center & Rewards</div>
+    <div style="font-size: 0.75rem; color: var(--subtext); margin-bottom: 14px;">Complete tasks below to unlock cash bonuses instantly!</div>
+    <div class="task-card">
+        <div class="task-left">
+            <div class="task-icon">🎁</div>
+            <div>
+                <div class="task-title">100% Deposit Bonus Task</div>
+                <div class="task-sub">Min. deposit $10 — get 100% cash bonus matched!</div>
+            </div>
+        </div>
+        <label for="tab-deposit" class="task-btn">Claim</label>
+    </div>
+    <div class="task-card" style="opacity: 0.6;">
+        <div class="task-left">
+            <div class="task-icon" style="background: var(--nav-bg); color: var(--subtext);">🔒</div>
+            <div>
+                <div class="task-title">First Swap Task</div>
+                <div class="task-sub">Complete a token swap to unlock $5 bonus</div>
+            </div>
+        </div>
+        <button class="task-btn" style="background: var(--subtext); cursor: not-allowed;" onclick="showToast('🔒 Complete deposit task first!')">Locked</button>
+    </div>
+</div>
+
+<div id="toast">Copied to clipboard!</div>
+
+<script>
+    function updateQR() {
+        const select = document.getElementById('depositCoin');
+        const val = select.value;
+        const parts = val.split(' - ');
+        const address = parts[1];
+        document.getElementById('displayAddr').innerText = address;
+        document.getElementById('qrImage').src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(address);
+    }
+    function copyText() {
+        const text = document.getElementById('displayAddr').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            showToast("📋 Address Copied to Clipboard!");
+        });
+    }
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+    function toggleTheme() {
+        const body = document.body;
+        const currentTheme = body.getAttribute('data-theme');
+        if (currentTheme === 'light') {
+            body.setAttribute('data-theme', 'dark');
+            showToast("🌙 Dark Mode Enabled");
+  
